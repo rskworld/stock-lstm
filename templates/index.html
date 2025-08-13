@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Price Prediction with LSTM</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-chart-line me-2"></i>Stock Price Prediction
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#home">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#predict">Predict</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#about">About</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero bg-primary text-white text-center py-5" id="home">
+        <div class="container">
+            <h1 class="display-4">Stock Price Prediction with LSTM</h1>
+            <p class="lead">Advanced AI-powered stock price forecasting using Long Short-Term Memory networks</p>
+            <a href="#predict" class="btn btn-light btn-lg mt-3">Get Started</a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="py-5">
+        <div class="container">
+            <!-- Stock Selection Form -->
+            <div class="card mb-5" id="predict">
+                <div class="card-header bg-dark text-white">
+                    <h3 class="mb-0">Stock Prediction</h3>
+                </div>
+                <div class="card-body">
+                    <form id="stockForm" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="ticker" class="form-label">Stock Ticker</label>
+                            <input type="text" class="form-control" id="ticker" value="AAPL" required>
+                            <div class="form-text">Enter stock symbol (e.g., AAPL, MSFT, GOOGL)</div>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="timeStep" class="form-label">Time Step (Days)</label>
+                            <input type="number" class="form-control" id="timeStep" value="60" min="1">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="epochs" class="form-label">Training Epochs</label>
+                            <input type="number" class="form-control" id="epochs" value="50" min="1">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100" id="trainBtn">
+                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                Train Model
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card mb-4">
+                        <div class="card-header bg-dark text-white">
+                            <h4 class="mb-0">Stock Price History & Prediction</h4>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="stockChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="card mb-4">
+                        <div class="card-header bg-dark text-white">
+                            <h4 class="mb-0">Prediction Controls</h4>
+                        </div>
+                        <div class="card-body">
+                            <form id="predictionForm" class="mb-4">
+                                <div class="mb-3">
+                                    <label for="predictionDays" class="form-label">Days to Predict</label>
+                                    <input type="number" class="form-control" id="predictionDays" value="30" min="1" max="90">
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100" id="predictBtn" disabled>
+                                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                    Predict
+                                </button>
+                            </form>
+                            <div class="alert alert-info">
+                                <h5>Prediction Summary</h5>
+                                <p class="mb-1">Current Price: <span id="currentPrice" class="fw-bold">-</span></p>
+                                <p class="mb-1">Predicted Price: <span id="predictedPrice" class="fw-bold">-</span></p>
+                                <p class="mb-0">Change: <span id="priceChange" class="fw-bold">-</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock Details -->
+            <div class="card mb-5">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0">Stock Details</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover" id="stockTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Open</th>
+                                    <th>High</th>
+                                    <th>Low</th>
+                                    <th>Close</th>
+                                    <th>Volume</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stockTableBody">
+                                <!-- Data will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- About Section -->
+    <section class="bg-light py-5" id="about">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 mx-auto text-center">
+                    <h2 class="mb-4">About This Project</h2>
+                    <p class="lead mb-4">
+                        This application uses Long Short-Term Memory (LSTM) neural networks to predict future stock prices based on historical data.
+                        The model is trained on your selected stock's price history and can forecast future price movements with reasonable accuracy.
+                    </p>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Created by Molla Samser</h5>
+                            <p class="card-text">
+                                <i class="fas fa-globe me-2"></i> <a href="https://rskworld.in" target="_blank">rskworld.in</a><br>
+                                <i class="fas fa-envelope me-2"></i> <a href="mailto:help@rskworld.in">help@rskworld.in</a><br>
+                                <i class="fas fa-phone me-2"></i> +91 9330539277
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2025 Stock Price Prediction. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
